@@ -9,8 +9,15 @@ Item {
     property var iconFont
     property var window
     property int lyricIndex: -1
+    property int restoreVisibility: Window.Windowed
     signal backRequested()
     readonly property bool compactLayout: width < 860
+    readonly property bool expansiveLayout: width >= 1500
+    readonly property real stageWidth: Math.min(width - (compactLayout ? 40 : 96),
+                                                expansiveLayout ? 1440 : 1180)
+    readonly property real coverSize: Math.min(expansiveLayout ? 460 : 410,
+                                                Math.max(230, (height - 118) * 0.64),
+                                                stageWidth * (compactLayout ? 0.34 : 0.32))
 
     readonly property color pageColor: "#36352B"
     readonly property color primaryText: "#F5F3EA"
@@ -43,6 +50,25 @@ Item {
             lyricIndex = idx
             if (idx >= 0 && lyricList.count > 0) lyricList.positionViewAtIndex(idx, ListView.Center)
         }
+    }
+
+    function toggleFullScreen() {
+        if (!root.window)
+            return
+        if (root.window.visibility === Window.FullScreen) {
+            if (root.restoreVisibility === Window.Maximized)
+                root.window.showMaximized()
+            else
+                root.window.showNormal()
+            return
+        }
+        root.restoreVisibility = root.window.visibility
+        root.window.showFullScreen()
+    }
+
+    function exitFullScreen() {
+        if (root.window && root.window.visibility === Window.FullScreen)
+            root.toggleFullScreen()
     }
 
     Connections {
@@ -110,10 +136,10 @@ Item {
             AppC.PlayerIconButton {
                 width: 38; height: 38
                 iconFont: root.iconFont
-                glyph: "\uf2d0"
+                glyph: root.window.visibility === Window.FullScreen ? "\uf066" : "\uf065"
                 glyphColor: "#C7BCB9"
                 glyphSize: 13
-                onClicked: root.window.visibility === Window.Maximized ? root.window.showNormal() : root.window.showMaximized()
+                onClicked: root.toggleFullScreen()
             }
             AppC.PlayerIconButton {
                 width: 38; height: 38
@@ -133,22 +159,20 @@ Item {
             height: windowBar.height
             z: 2
             onPressed: root.window.startSystemMove()
-            onDoubleClicked: root.window.visibility === Window.Maximized ? root.window.showNormal() : root.window.showMaximized()
+            onDoubleClicked: root.toggleFullScreen()
         }
 
         RowLayout {
-            anchors.left: parent.left
-            anchors.right: parent.right
+            width: root.stageWidth
+            anchors.horizontalCenter: parent.horizontalCenter
             anchors.top: windowBar.bottom
             anchors.bottom: parent.bottom
-            anchors.leftMargin: root.compactLayout ? 20 : Math.max(56, parent.width * 0.055)
-            anchors.rightMargin: root.compactLayout ? 20 : Math.max(52, parent.width * 0.05)
             anchors.topMargin: 12
             anchors.bottomMargin: 18
-            spacing: root.compactLayout ? 24 : Math.max(42, parent.width * 0.045)
+            spacing: root.compactLayout ? 24 : (root.expansiveLayout ? 72 : 48)
 
             ColumnLayout {
-                Layout.preferredWidth: root.compactLayout ? Math.min(260, root.width * 0.38) : Math.min(460, root.width * 0.39)
+                Layout.preferredWidth: root.coverSize + (root.compactLayout ? 0 : 24)
                 Layout.fillHeight: true
                 spacing: 20
 
@@ -156,10 +180,10 @@ Item {
 
                 AppC.CoverImage {
                     Layout.alignment: Qt.AlignHCenter
-                    Layout.preferredWidth: root.compactLayout ? Math.min(230, root.width * 0.34, root.height * 0.43) : Math.min(420, root.width * 0.34, root.height * 0.52)
+                    Layout.preferredWidth: root.coverSize
                     Layout.preferredHeight: Layout.preferredWidth
                     source: player.currentTrack.cover || ""
-                    requestedSize: root.compactLayout ? 420 : 760
+                    requestedSize: root.compactLayout ? 520 : 900
                     cornerRadius: 16
                     placeholderColor: "#4A493D"
                     glyphColor: "#8F8D83"
@@ -174,8 +198,8 @@ Item {
 
                 ColumnLayout {
                     anchors.fill: parent
-                    anchors.topMargin: Math.max(38, root.height * 0.055)
-                    anchors.bottomMargin: Math.max(22, root.height * 0.035)
+                    anchors.topMargin: root.expansiveLayout ? 34 : 24
+                    anchors.bottomMargin: root.expansiveLayout ? 30 : 22
                     spacing: 14
 
                     ColumnLayout {

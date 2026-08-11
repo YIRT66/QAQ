@@ -12,6 +12,7 @@ Item {
 
     property int categoryIndex: 0
     readonly property bool compactCategories: width < 860
+    readonly property bool shortCategories: height < 700
     readonly property color cardColor: theme.isDark ? "#292923" : "#FFFFFF"
     readonly property color softColor: theme.isDark ? "#23231F" : "#F3F5F7"
     readonly property color muted: theme.isDark ? "#999A93" : "#777B84"
@@ -26,7 +27,8 @@ Item {
                 { title: "Sources", subtitle: "Providers and health", glyph: "⇄" },
                 { title: "Desktop", subtitle: "Tray, updates and safety", glyph: "□" },
                 { title: "Account", subtitle: "Cloud and account", glyph: "●" },
-                { title: "Extensions", subtitle: "Plugins and permissions", glyph: "⌘" }
+                { title: "Extensions", subtitle: "Plugins and permissions", glyph: "⌘" },
+                { title: "About", subtitle: "Author, project and credits", glyph: "i" }
             ]
         }
         return [
@@ -36,7 +38,8 @@ Item {
             { title: "播放来源", subtitle: "音源开关与健康状态", glyph: "⇄" },
             { title: "桌面与更新", subtitle: "托盘、更新与诊断", glyph: "□" },
             { title: "账户与云端", subtitle: "登录与双云节点", glyph: "●" },
-            { title: "扩展与插件", subtitle: "底层接口、权限与贡献点", glyph: "⌘" }
+            { title: "扩展与插件", subtitle: "底层接口、权限与贡献点", glyph: "⌘" },
+            { title: "关于软件", subtitle: "作者、项目与开源致谢", glyph: "i" }
         ]
     }
 
@@ -133,7 +136,7 @@ Item {
         signal activated()
 
         implicitWidth: compact ? Math.max(96, titleText.implicitWidth + 34) : 198
-        implicitHeight: compact ? 38 : 58
+        implicitHeight: compact ? 38 : (root.shortCategories ? 50 : 58)
         radius: compact ? 12 : 14
         color: root.categoryIndex === category
                ? (theme.isDark ? "#303B36" : "#E7F6F1")
@@ -149,8 +152,8 @@ Item {
             spacing: 9
             Rectangle {
                 visible: !tile.compact
-                Layout.preferredWidth: 32
-                Layout.preferredHeight: 32
+                Layout.preferredWidth: root.shortCategories ? 29 : 32
+                Layout.preferredHeight: root.shortCategories ? 29 : 32
                 radius: 10
                 color: root.categoryIndex === tile.category ? app.accentColor : root.softColor
                 Text {
@@ -194,6 +197,91 @@ Item {
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
             onClicked: tile.activated()
+        }
+    }
+
+    component CreditRow: Rectangle {
+        id: credit
+        property string mark: "•"
+        property string name: ""
+        property string caption: ""
+        property string badge: ""
+        property string url: ""
+
+        Layout.fillWidth: true
+        Layout.preferredHeight: 68
+        radius: 13
+        color: creditHover.hovered ? root.softColor : "transparent"
+        border.width: 1
+        border.color: creditHover.hovered ? (theme.isDark ? "#2AFFFFFF" : "#14000000") : root.divider
+        Behavior on color { ColorAnimation { duration: app.animationsEnabled ? 120 : 0 } }
+
+        HoverHandler { id: creditHover }
+
+        RowLayout {
+            anchors.fill: parent
+            anchors.leftMargin: 12
+            anchors.rightMargin: 10
+            spacing: 11
+
+            Rectangle {
+                Layout.preferredWidth: 36
+                Layout.preferredHeight: 36
+                radius: 11
+                color: theme.isDark ? "#263A34" : "#E6F6F1"
+                Text {
+                    anchors.centerIn: parent
+                    text: credit.mark
+                    color: app.accentColor
+                    font.pixelSize: 11
+                    font.bold: true
+                }
+            }
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: 2
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 7
+                    Text {
+                        text: credit.name
+                        color: theme.textColor
+                        font.pixelSize: 10
+                        font.bold: true
+                    }
+                    Rectangle {
+                        visible: credit.badge.length > 0
+                        Layout.preferredWidth: badgeText.implicitWidth + 14
+                        Layout.preferredHeight: 20
+                        radius: 10
+                        color: root.softColor
+                        Text {
+                            id: badgeText
+                            anchors.centerIn: parent
+                            text: credit.badge
+                            color: root.muted
+                            font.pixelSize: 7
+                            font.bold: true
+                        }
+                    }
+                    Item { Layout.fillWidth: true }
+                }
+                Text {
+                    Layout.fillWidth: true
+                    text: credit.caption
+                    color: root.muted
+                    font.pixelSize: 8
+                    elide: Text.ElideRight
+                }
+            }
+            AppC.AppButton {
+                theme: root.theme
+                text: app.language === "en-US" ? "Open link" : "打开链接"
+                iconText: "↗"
+                variant: "ghost"
+                sidePadding: 11
+                onClicked: Qt.openUrlExternally(credit.url)
+            }
         }
     }
 
@@ -292,7 +380,7 @@ Item {
                     Item { Layout.fillHeight: true }
                     Rectangle {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: 62
+                        Layout.preferredHeight: root.shortCategories ? 50 : 62
                         radius: 13
                         color: root.softColor
                         RowLayout {
@@ -718,6 +806,157 @@ Item {
                             }
                         }
                         Text { visible: app.plugins.length === 0; Layout.fillWidth: true; text: app.language === "en-US" ? "No local extensions installed." : "还没有安装本地扩展。可先创建示例或打开插件目录。"; color: root.muted; font.pixelSize: 9 }
+                    }
+
+                    ColumnLayout {
+                        visible: root.categoryIndex === 7
+                        Layout.fillWidth: true
+                        spacing: 12
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: root.compactCategories ? 218 : 184
+                            radius: app.themePreset === "paper" ? 14 : 18
+                            color: theme.isDark ? "#25312D" : "#EAF7F3"
+                            border.width: 1
+                            border.color: theme.isDark ? "#26FFFFFF" : "#12000000"
+
+                            ColumnLayout {
+                                anchors.fill: parent
+                                anchors.margins: 18
+                                spacing: 11
+
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 14
+                                    Rectangle {
+                                        Layout.preferredWidth: 58
+                                        Layout.preferredHeight: 58
+                                        radius: 17
+                                        color: app.accentColor
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: "E"
+                                            color: "#14201D"
+                                            font.pixelSize: 27
+                                            font.bold: true
+                                            font.italic: true
+                                        }
+                                    }
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 3
+                                        RowLayout {
+                                            Layout.fillWidth: true
+                                            spacing: 8
+                                            Text {
+                                                text: "EvolveMusic"
+                                                color: theme.textColor
+                                                font.pixelSize: 20
+                                                font.bold: true
+                                            }
+                                            Rectangle {
+                                                Layout.preferredWidth: versionText.implicitWidth + 16
+                                                Layout.preferredHeight: 22
+                                                radius: 11
+                                                color: theme.isDark ? "#193D34" : "#D7F1E9"
+                                                Text {
+                                                    id: versionText
+                                                    anchors.centerIn: parent
+                                                    text: "v0.18.1"
+                                                    color: app.accentColor
+                                                    font.pixelSize: 8
+                                                    font.bold: true
+                                                }
+                                            }
+                                            Item { Layout.fillWidth: true }
+                                        }
+                                        Text {
+                                            text: app.language === "en-US" ? "Created by 小学扛把子" : "作者：小学扛把子"
+                                            color: theme.textColor
+                                            font.pixelSize: 10
+                                            font.bold: true
+                                        }
+                                        Text {
+                                            Layout.fillWidth: true
+                                            text: app.language === "en-US"
+                                                  ? "A Windows desktop music player for discovery, playlists, social listening and extensible playback."
+                                                  : "面向 Windows 的桌面音乐播放器，聚合发现、歌单、一起听与可扩展播放能力。"
+                                            color: root.muted
+                                            font.pixelSize: 8
+                                            wrapMode: Text.Wrap
+                                        }
+                                    }
+                                }
+
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 8
+                                    AppC.AppButton {
+                                        theme: root.theme
+                                        text: app.language === "en-US" ? "Author on Bilibili" : "访问作者 Bilibili"
+                                        iconText: "▶"
+                                        variant: "primary"
+                                        onClicked: Qt.openUrlExternally("https://space.bilibili.com/1247730173")
+                                    }
+                                    AppC.AppButton {
+                                        theme: root.theme
+                                        text: app.language === "en-US" ? "GitHub repository" : "查看 GitHub 仓库"
+                                        iconText: "↗"
+                                        variant: "secondary"
+                                        onClicked: Qt.openUrlExternally("https://github.com/YIRT66/QAQ")
+                                    }
+                                    Item { Layout.fillWidth: true }
+                                }
+                            }
+                        }
+
+                        SettingsCard {
+                            heading: app.language === "en-US" ? "Open-source projects and libraries" : "开源项目与第三方库"
+                            caption: app.language === "en-US"
+                                     ? "Thanks to the projects below. Select a row to review its source and license information."
+                                     : "感谢以下项目为 EvolveMusic 提供基础能力。可打开对应主页查看源码与许可说明。"
+                            CreditRow {
+                                mark: "Qt"
+                                name: "Qt 6"
+                                badge: "LGPL / GPL"
+                                caption: app.language === "en-US" ? "Application framework, QML UI, multimedia and networking" : "应用框架、QML 界面、多媒体播放与网络能力"
+                                url: "https://www.qt.io/"
+                            }
+                            CreditRow {
+                                mark: "EU"
+                                name: "EvolveUI"
+                                badge: "MIT"
+                                caption: app.language === "en-US" ? "QML component library by Sudo Evolve" : "Sudo Evolve 开发的 QML 组件库"
+                                url: "https://github.com/sudoevolve/EvolveUI"
+                            }
+                            CreditRow {
+                                mark: "NE"
+                                name: "NeteaseCloudMusicApiEnhanced"
+                                badge: "MIT"
+                                caption: app.language === "en-US" ? "Local NetEase Cloud Music API runtime" : "本地网易云音乐 API 运行服务"
+                                url: "https://github.com/NeteaseCloudMusicApiEnhanced/api-enhanced"
+                            }
+                            CreditRow {
+                                mark: "FA"
+                                name: "Font Awesome Free"
+                                badge: "Free License"
+                                caption: app.language === "en-US" ? "Icon font resources bundled through EvolveUI" : "通过 EvolveUI 使用的图标字体资源"
+                                url: "https://github.com/FortAwesome/Font-Awesome"
+                            }
+                        }
+
+                        SettingsCard {
+                            heading: app.language === "en-US" ? "Music service" : "音乐服务"
+                            caption: app.language === "en-US" ? "Online catalog and playback metadata services used by this build." : "当前版本接入的在线音乐目录与播放元数据服务。"
+                            CreditRow {
+                                mark: "OC"
+                                name: "Ourcraft Music API"
+                                badge: "Online API"
+                                caption: "music.yuncan.xyz"
+                                url: "https://music.yuncan.xyz"
+                            }
+                        }
                     }
 
                     Item { Layout.fillWidth: true; Layout.preferredHeight: 22 }

@@ -84,7 +84,7 @@ ApplicationWindow {
     }
 
     Rectangle {
-        id: shell; anchors.fill: parent; radius: root.visibility===Window.Maximized?0:12; clip: true
+        id: shell; anchors.fill: parent; radius: (root.visibility===Window.Maximized || root.visibility===Window.FullScreen)?0:12; clip: true
         color: root.immersivePlayer ? "#36352B" : root.appCanvasColor
         border.color: theme.isDark ? "#14FFFFFF" : "#10000000"
         Behavior on color { ColorAnimation { duration: app.animationsEnabled ? 220 : 0 } }
@@ -139,7 +139,7 @@ ApplicationWindow {
                 }
                 Pages.PlaylistPage { theme: theme; iconFont: iconFont }
                 Pages.LibraryPage { theme: theme; iconFont: iconFont; tab: root.libraryTab; onTabChanged: root.libraryTab=tab }
-                Pages.NowPlayingPage { theme: theme; iconFont: iconFont; window: root; onBackRequested: root.leaveNowPlaying() }
+                Pages.NowPlayingPage { id: nowPlayingPage; theme: theme; iconFont: iconFont; window: root; onBackRequested: root.leaveNowPlaying() }
                 Pages.SettingsPage { theme: theme; iconFont: iconFont }
                 Pages.TogetherPage { theme: theme; iconFont: iconFont }
                 Pages.ProfilePage { theme: theme; iconFont: iconFont }
@@ -291,5 +291,19 @@ ApplicationWindow {
     Shortcut { sequence:"Space"; onActivated:player.togglePlay() }
     Shortcut { sequence:"Ctrl+Right"; onActivated:player.next() }
     Shortcut { sequence:"Ctrl+Left"; onActivated:player.previous() }
-    Shortcut { sequence:"Escape"; enabled:root.immersivePlayer; onActivated:root.leaveNowPlaying() }
+    Shortcut {
+        sequence: "F11"
+        enabled: root.immersivePlayer
+        onActivated: nowPlayingPage.toggleFullScreen()
+    }
+    Shortcut {
+        sequence: "Escape"
+        enabled: root.immersivePlayer
+        onActivated: {
+            if (root.visibility === Window.FullScreen)
+                nowPlayingPage.exitFullScreen()
+            else
+                root.leaveNowPlaying()
+        }
+    }
 }
