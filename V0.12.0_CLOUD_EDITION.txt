@@ -1,0 +1,21 @@
+EvolveMusic v0.12.0 Cloud Edition
+
+Main fixes:
+- Cloud audio is downloaded asynchronously through the already verified Worker
+  and cached locally before Qt Multimedia opens it.
+- This removes the fragile QMediaPlayer -> remote Worker URL dependency.
+- Audio cache is per local profile and automatically pruned around 768 MB.
+- Recommendation and Discover pages always show useful discovery entry cards.
+- Worker v0.10.6 can populate /v1/home without NETEASE_API_ORIGIN and supports
+  generated search playlists.
+- Settings UI is rebuilt for Cloud Edition and no longer shows 127.0.0.1
+  provider gateway cards while using normal cloud mode.
+- Worker /v1/audio accepts HEAD as well as GET for media-engine compatibility.
+
+Cloudflare Worker:
+cloudflare/evolvemusic-cloud/worker-dashboard-v0.10.6.js
+
+Deploy that file in the Cloudflare Dashboard after installing the desktop update.
+The desktop cached-playback fix also works with the already verified v0.10.5 GET
+audio route, while v0.10.6 restores cloud home/discovery and improves media HTTP
+compatibility.
