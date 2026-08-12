@@ -1,16 +1,45 @@
+# Build output and local scratch data
 /build/
 /build-*/
 /dist/
 /.tmp/
+/out/
+
+# Local runtime state and dependencies fetched by setup scripts
+/runtime/client-data/
+/runtime/netease-api/
+/third_party/EvolveUI/
 **/node_modules/
 **/.codegraph/
-/runtime/client-data/
+
+# Website workspace and Windows server deployment package are maintained locally
+# and are intentionally not part of the public source repository.
+/server-package/
+/网站/
+/pack_evolvemusic_source.ps1
+/scripts/package_windows_nat_server.ps1
+
+# Secrets and machine-local configuration
+.env
+.env.*
+!.env.example
+!.env.*.example
+**/wrangler.jsonc
+!**/wrangler.example.jsonc
+*.pem
+*.key
+*.ppk
 /.vs/
 /.vscode/
 *.user
+
+# Generated and temporary files
 *.qmlc
 *.jsc
 *.zip
+*.7z
+*.rar
 *.bak
 *.log
+*.tmp
 .DS_Store

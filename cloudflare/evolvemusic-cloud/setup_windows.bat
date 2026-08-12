@@ -4,9 +4,14 @@ cd /d "%~dp0"
 
 echo.
 echo ============================================================
-echo   EvolveMusic Cloud v0.10.0 - Cloudflare setup
+echo   EvolveMusic Cloud - Cloudflare setup
 echo ============================================================
 echo.
+
+if not exist wrangler.jsonc (
+  copy /y wrangler.example.jsonc wrangler.jsonc >nul
+  echo Created wrangler.jsonc from the public example.
+)
 
 call npm install
 if errorlevel 1 exit /b 1
@@ -30,9 +35,9 @@ echo   setup_windows.bat deploy
 echo.
 if /I not "%~1"=="deploy" exit /b 0
 
-findstr /C:"REPLACE_WITH_D1_DATABASE_ID" wrangler.jsonc >nul 2>nul
+findstr /C:"00000000-0000-0000-0000-000000000000" wrangler.jsonc >nul 2>nul
 if not errorlevel 1 (
-  echo ERROR: wrangler.jsonc still contains the D1 placeholder.
+  echo ERROR: wrangler.jsonc still contains the example D1 database ID.
   exit /b 1
 )
 
