@@ -3,11 +3,13 @@
 
 #include <QApplication>
 #include <QDir>
+#include <QFont>
 #include <QLockFile>
 #include <QMessageBox>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QQuickStyle>
+#include <QQuickWindow>
 #include <QStandardPaths>
 #include <QTimer>
 
@@ -45,6 +47,19 @@ int main(int argc, char *argv[])
     app.setOrganizationName("EvolveMusic");
     app.setQuitOnLastWindowClosed(false);
     QQuickStyle::setStyle("Basic");
+
+#ifdef Q_OS_WIN
+    // Qt Quick defaults to its distance-field text renderer. On Windows that
+    // can look noticeably soft at common 100/125/150% desktop scale factors,
+    // especially for the 9-22 px UI text used throughout EvolveMusic.
+    // Use the native Windows rasterizer before any QML Text/TextInput objects
+    // are created, and ask it for full pixel-grid hinting for crisper glyphs.
+    QQuickWindow::setTextRenderType(QQuickWindow::NativeTextRendering);
+    QFont uiFont = app.font();
+    uiFont.setHintingPreference(QFont::PreferFullHinting);
+    uiFont.setStyleStrategy(QFont::PreferQuality);
+    app.setFont(uiFont);
+#endif
 
     // Avoid two full EvolveMusic instances fighting over the player, tray,
     // session files and auto-update state. The watchdog starts only after the
@@ -116,8 +131,6 @@ int main(int argc, char *argv[])
     qInfo() << "QML load request completed. Root objects:" << engine.rootObjects().size();
 
     // A QML syntax/type error means there is no application window to protect.
-    // Do not launch the watchdog or initialize background services in that state,
-    // otherwise a broken build can repeatedly respawn itself.
     if (engine.rootObjects().isEmpty()) {
         qCritical() << "No QML root object; waiting for startup-failure handler.";
         return app.exec();
